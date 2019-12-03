@@ -14,6 +14,7 @@ import java.util.concurrent.Executor;
  */
 public interface BagWriter {
 
+    BagWriter metrics(boolean metrics);
     BagWriter validate(boolean validate);
     BagWriter withPackager(Packager packager);
 

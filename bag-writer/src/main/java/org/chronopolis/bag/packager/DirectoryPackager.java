@@ -1,6 +1,5 @@
 package org.chronopolis.bag.packager;
 
-import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.HashingOutputStream;
 import org.chronopolis.bag.core.Manifest;
@@ -48,7 +47,7 @@ public class DirectoryPackager implements Packager {
     }
 
     @Override
-    public HashCode writeTagFile(TagFile tagFile, HashFunction function, PackagerData data) throws IOException {
+    public PackageResult writeTagFile(TagFile tagFile, HashFunction function, PackagerData data) throws IOException {
         // tagFile.getName() or tagFile.getPath()
         // "sub/dir/name" not really the name
         // "sub/dir/name" is a path
@@ -61,7 +60,7 @@ public class DirectoryPackager implements Packager {
     }
 
     @Override
-    public HashCode writeManifest(Manifest manifest, HashFunction function, PackagerData data) throws IOException {
+    public PackageResult writeManifest(Manifest manifest, HashFunction function, PackagerData data) throws IOException {
         Path tag = data.getWrite().resolve(manifest.getPath());
         try (InputStream is = manifest.getInputStream()) {
             return writeFile(tag, function, is);
@@ -69,7 +68,7 @@ public class DirectoryPackager implements Packager {
     }
 
     @Override
-    public HashCode writePayloadFile(PayloadFile payloadFile, HashFunction function, PackagerData data) throws IOException {
+    public PackageResult writePayloadFile(PayloadFile payloadFile, HashFunction function, PackagerData data) throws IOException {
         // Ensure that all the directories are created first
         Path payload = data.getWrite().resolve(payloadFile.getFile());
         try {
@@ -94,11 +93,11 @@ public class DirectoryPackager implements Packager {
      * @throws IOException if there's a problem writing bytes
      */
     @SuppressWarnings("WeakerAccess")
-    protected HashCode writeFile(Path out, HashFunction function, InputStream is) throws IOException {
+    protected PackageResult writeFile(Path out, HashFunction function, InputStream is) throws IOException {
         OutputStream os = Files.newOutputStream(out, StandardOpenOption.CREATE);
         HashingOutputStream hos = new HashingOutputStream(function, os);
-        transfer(is, hos);
-        return hos.hash();
+        Long bytes = transfer(is, hos);
+        return new PackageResult(bytes, hos.hash());
     }
 
 }

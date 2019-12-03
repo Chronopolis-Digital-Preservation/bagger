@@ -1,6 +1,5 @@
 package org.chronopolis.bag.packager;
 
-import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.HashingInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -76,7 +75,7 @@ public class TarPackager implements Packager {
     }
 
     @Override
-    public HashCode writeTagFile(TagFile tagFile, HashFunction function, PackagerData data) throws IOException {
+    public PackageResult writeTagFile(TagFile tagFile, HashFunction function, PackagerData data) throws IOException {
         Path path = getTarPath(data.getName(), tagFile.getPath());
         try (InputStream is = tagFile.getInputStream()) {
             return writeFile(function, is, path.toString(), tagFile.getSize(), data);
@@ -84,7 +83,7 @@ public class TarPackager implements Packager {
     }
 
     @Override
-    public HashCode writeManifest(Manifest manifest, HashFunction function, PackagerData data) throws IOException {
+    public PackageResult writeManifest(Manifest manifest, HashFunction function, PackagerData data) throws IOException {
         Path path = getTarPath(data.getName(), manifest.getPath());
         try (InputStream is = manifest.getInputStream()) {
             return writeFile(function, is, path.toString(), manifest.getSize(), data);
@@ -92,32 +91,34 @@ public class TarPackager implements Packager {
     }
 
     @Override
-    public HashCode writePayloadFile(PayloadFile payloadFile, HashFunction function, PackagerData data) throws IOException {
+    public PackageResult writePayloadFile(PayloadFile payloadFile, HashFunction function, PackagerData data) throws IOException {
         Path path = getTarPath(data.getName(), payloadFile.getFile());
         try (InputStream is = payloadFile.getInputStream()) {
             return writeFile(function, is, path.toString(), payloadFile.getSize(), data);
         }
     }
 
-    private HashCode writeFile(HashFunction function, InputStream is, String path, long size, PackagerData data) throws IOException {
+    private PackageResult writeFile(HashFunction function, InputStream is, String path, long size, PackagerData data) throws IOException {
+        PackageResult result;
         HashingInputStream his = null;
         OutputStream os = data.getOs();
         // Figure this out/clean it up a bit
         if (!(os instanceof TarArchiveOutputStream)) {
             log.error("Cannot package tar archive to non tar stream");
-            return function.newHasher().hash();
+            return new PackageResult(0L, function.newHasher().hash());
         }
 
         TarArchiveOutputStream outputStream = (TarArchiveOutputStream) os;
-
         TarArchiveEntry entry = new TarArchiveEntry(path);
+        Long bytes;
+
         log.trace("Setting payload size of " + size);
         entry.setSize(size);
         outputStream.putArchiveEntry(entry);
         long written = outputStream.getBytesWritten();
         his = new HashingInputStream(function, is);
         try {
-            transfer(his, outputStream);
+            bytes = transfer(his, outputStream);
         } catch (IOException e) {
             log.error("Error writing TarArchiveEntry {}", path, e);
             failArchiveEntry(size, written, outputStream);
@@ -125,7 +126,7 @@ public class TarPackager implements Packager {
         }
         outputStream.closeArchiveEntry();
 
-        return his.hash();
+        return new PackageResult(bytes, his.hash());
     }
 
     /**
@@ -188,25 +189,27 @@ public class TarPackager implements Packager {
      * @throws IOException if there's a problem transferring bytes
      */
     @Override
-    public void transfer(InputStream is, OutputStream os) throws IOException {
+    public Long transfer(InputStream is, OutputStream os) throws IOException {
+        Long written = 0L;
         ReadableByteChannel inch = Channels.newChannel(is);
         WritableByteChannel wrch = Channels.newChannel(os);
 
         ByteBuffer buffer = ByteBuffer.allocateDirect(32768);
         while (inch.read(buffer) != -1) {
             buffer.flip();
-            wrch.write(buffer);
+            written += wrch.write(buffer);
             buffer.compact();
         }
 
         buffer.flip();
         if (buffer.hasRemaining()) {
-            wrch.write(buffer);
+            written += wrch.write(buffer);
         }
 
         buffer.clear();
         inch.close();
         is.close();
+        return written;
     }
 
 }

@@ -1,6 +1,7 @@
 package org.chronopolis.bag.writer;
 
 import org.chronopolis.bag.core.Bag;
+import org.chronopolis.bag.metrics.WriteMetrics;
 
 /**
  * Result from trying to write a bag
@@ -12,6 +13,7 @@ public class WriteResult {
     private Bag bag;
     private String receipt;
     private boolean success;
+    private WriteMetrics metrics;
 
     public WriteResult() {
         this.success = true;
@@ -42,5 +44,14 @@ public class WriteResult {
     public WriteResult setSuccess(boolean success) {
         this.success = success;
         return this;
+    }
+
+    public WriteResult setMetrics(WriteMetrics metrics) {
+        this.metrics = metrics;
+        return this;
+    }
+
+    public WriteMetrics getMetrics() {
+        return metrics;
     }
 }

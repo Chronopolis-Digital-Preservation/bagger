@@ -13,8 +13,16 @@
     <modules>
         <module>bag-core</module>
         <module>bag-writer</module>
-        <module>bag-verify</module>
     </modules>
+
+    <profiles>
+        <profile>
+            <id>full</id>
+            <modules>
+                <module>bag-verify</module>
+            </modules>
+        </profile>
+    </profiles>
 
     <build>
         <plugins>
@@ -36,6 +44,11 @@
             <name>lib-artifacts-releases</name>
             <url>https://lib-artifacts.ucsd.edu/artifactory/maven-release-local</url>
         </repository>
+        <snapshotRepository>
+            <id>adapt-snapshots</id>
+            <name>Snapshots</name>
+            <url>https://scm.umiacs.umd.edu/adapt/repository/maven-snapshots/</url>
+        </snapshotRepository>
     </distributionManagement>
 
     <dependencyManagement>
