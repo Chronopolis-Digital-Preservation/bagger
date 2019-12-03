@@ -1,6 +1,5 @@
 package org.chronopolis.bag.packager;
 
-import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.io.Files;
 import org.chronopolis.bag.core.Manifest;
@@ -45,8 +44,8 @@ public class InPlaceDirectoryPackager extends DirectoryPackager {
     }
 
     @Override
-    public HashCode writeTagFile(TagFile tagFile, HashFunction function, PackagerData data) {
-        HashCode hash = null;
+    public PackageResult writeTagFile(TagFile tagFile, HashFunction function, PackagerData data) {
+        PackageResult result = null;
 
         Path tag = base.resolve(tagFile.getPath());
         String errorText = null;
@@ -55,36 +54,37 @@ public class InPlaceDirectoryPackager extends DirectoryPackager {
             if (tag.toFile().exists()) {
                 errorText = "Error hashing TagFile {}";
                 log.debug("TagFile {} already exists, only hashing", tag);
-                hash = Files.hash(tag.toFile(), function);
+                result = new PackageResult(0L, Files.hash(tag.toFile(), function));
             } else {
                 errorText = "Error writing TagFile {}";
                 log.debug("TagFile {} not found, creating", tag);
-                hash = writeFile(tag, function, tagFile.getInputStream());
+                result = writeFile(tag, function, tagFile.getInputStream());
             }
         } catch (IOException e) {
             log.error(errorText, tag, e);
         }
 
-        return hash;
+        return result;
     }
 
     @Override
-    public HashCode writeManifest(Manifest manifest, HashFunction function, PackagerData data) {
+    public PackageResult writeManifest(Manifest manifest, HashFunction function, PackagerData data) {
         return writeTagFile(manifest, function, data);
     }
 
     @Override
-    public HashCode writePayloadFile(PayloadFile payloadFile, HashFunction function, PackagerData data) {
+    public PackageResult writePayloadFile(PayloadFile payloadFile, HashFunction function, PackagerData data) {
         // Ensure that all the directories are created first
         Path payload = base.resolve(payloadFile.getFile());
-        HashCode hash = null;
+        PackageResult result;
         try {
-            hash = Files.hash(payload.toFile(), function);
+            result = new PackageResult(0L, Files.hash(payload.toFile(), function));
         } catch (IOException e) {
             log.error("Error hashing payload file {}", payload, e);
+            result = new PackageResult(0L, function.hashInt(0));
         }
 
-        return hash;
+        return result;
     }
 
 }

@@ -45,7 +45,7 @@ public class DirectoryPackagerTest extends PackagerTest {
         DirectoryPackager packager = startPackager();
         PackagerData packagerData = packager.startBuild(testName);
         BagIt bagIt = new BagIt();
-        HashCode hashCode = packager.writeTagFile(bagIt, func, packagerData);
+        HashCode hashCode = packager.writeTagFile(bagIt, func, packagerData).getHashCode();
 
         Assert.assertTrue(Files.exists(bag.resolve("bagit.txt")));
         Assert.assertTrue(Files.isRegularFile(bag.resolve("bagit.txt")));
@@ -59,7 +59,7 @@ public class DirectoryPackagerTest extends PackagerTest {
         DirectoryPackager packager = startPackager();
         PackagerData data = packager.startBuild(testName);
         IOTagFile tag = new IOTagFile();
-        HashCode hash = packager.writeTagFile(tag, func, data);
+        HashCode hash = packager.writeTagFile(tag, func, data).getHashCode();
 
         Assert.assertNull(hash);
         // Assert.assertFalse(Files.exists(bag.resolve(tag.getPath())));
@@ -77,7 +77,7 @@ public class DirectoryPackagerTest extends PackagerTest {
         m.addPayloadFile(f);
 
         HashCode payload = func.hashString(f.toString(), Charset.defaultCharset());
-        HashCode pkgHash = packager.writeManifest(m, func, data);
+        HashCode pkgHash = packager.writeManifest(m, func, data).getHashCode();
         HashCode fileHash = com.google.common.io.Files.hash(bag.resolve("manifest-sha256.txt").toFile(), func);
 
         Assert.assertTrue(Files.exists(bag.resolve("manifest-sha256.txt")));
@@ -95,7 +95,7 @@ public class DirectoryPackagerTest extends PackagerTest {
         DirectoryPackager packager = startPackager();
         PackagerData data = packager.startBuild(testName);
         Manifest m = new IOManifest();
-        HashCode hash = packager.writeManifest(m, func, data);
+        HashCode hash = packager.writeManifest(m, func, data).getHashCode();
 
         Assert.assertNull(hash);
         // Assert.assertFalse(Files.exists(bag.resolve(m.getPath())));
@@ -108,7 +108,7 @@ public class DirectoryPackagerTest extends PackagerTest {
 
         DirectoryPackager packager = startPackager();
         PackagerData data = packager.startBuild(testName);
-        HashCode hashCode = packager.writePayloadFile(f, func, data);
+        HashCode hashCode = packager.writePayloadFile(f, func, data).getHashCode();
 
         String tags = ClassLoader.getSystemClassLoader()
                                  .getResource("payload").getPath();
@@ -131,7 +131,7 @@ public class DirectoryPackagerTest extends PackagerTest {
         PackagerData data = packager.startBuild(testName);
         PayloadFile payload = new IOPayloadFile();
 
-        HashCode hash = packager.writePayloadFile(payload, func, data);
+        HashCode hash = packager.writePayloadFile(payload, func, data).getHashCode();
         Assert.assertNull(hash);
     }
 

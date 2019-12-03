@@ -14,11 +14,18 @@ import java.util.stream.Collectors;
  */
 public class SimpleBagWriter implements BagWriter {
 
+    private boolean captureMetrics;
     private boolean validate;
     private Packager packager;
 
     // TODO: Should we just have a constructor for these and
     //       not have any setters?
+
+    @Override
+    public BagWriter metrics(boolean metrics) {
+        this.captureMetrics = metrics;
+        return this;
+    }
 
     @Override
     public BagWriter validate(boolean validate) {
@@ -43,7 +50,7 @@ public class SimpleBagWriter implements BagWriter {
     // Just a helper so we have a clean map above
     // TODO should we have a WriteJobFactory so we can create custom WriteJobs?
     private WriteResult fromBag(Bag bag) {
-        WriteJob job = new WriteJob(bag, validate, packager);
+        WriteJob job = new WriteJob(bag, captureMetrics, validate, packager);
         return job.get();
     }
 
@@ -51,7 +58,7 @@ public class SimpleBagWriter implements BagWriter {
     public List<CompletableFuture<WriteResult>> write(List<Bag> bags, Executor executor) {
         checkNull(bags);
         return bags.stream()
-                .map(b -> CompletableFuture.supplyAsync(new WriteJob(b, validate, packager), executor))
+                .map(b -> CompletableFuture.supplyAsync(new WriteJob(b, captureMetrics, validate, packager), executor))
                 .collect(Collectors.toList());
     }
 

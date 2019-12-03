@@ -1,6 +1,5 @@
 package org.chronopolis.bag.packager;
 
-import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import org.chronopolis.bag.core.Manifest;
 import org.chronopolis.bag.core.PayloadFile;
@@ -39,27 +38,27 @@ public interface Packager {
      *
      * @param tagFile  The TagFile to write
      * @param function The HashFunction to use
-     * @return the digest of the tag file
+     * @return the result of writing the TagFile, including the Hash and Bytes written
      */
-    HashCode writeTagFile(TagFile tagFile, HashFunction function, PackagerData data) throws IOException;
+    PackageResult writeTagFile(TagFile tagFile, HashFunction function, PackagerData data) throws IOException;
 
     /**
      * Write the manifest file of the bag
      *
      * @param manifest The manifest to write
      * @param function The HashFunction to use
-     * @return the digest of the manifest
+     * @return the result of writing the Manifest
      */
-    HashCode writeManifest(Manifest manifest, HashFunction function, PackagerData data) throws IOException;
+    PackageResult writeManifest(Manifest manifest, HashFunction function, PackagerData data) throws IOException;
 
     /**
      * Write a payload file to the data directory of the bag
      *
      * @param payloadFile The PayloadFile to write
      * @param function The HashFunction to use
-     * @return the digest of the payload file
+     * @return the result of writing the payload file
      */
-    HashCode writePayloadFile(PayloadFile payloadFile, HashFunction function, PackagerData data) throws IOException;
+    PackageResult writePayloadFile(PayloadFile payloadFile, HashFunction function, PackagerData data) throws IOException;
 
     /**
      * Transfer bytes from an InputStream to an OutputStream using Channels
@@ -67,8 +66,10 @@ public interface Packager {
      * @param is the InputStream to read from
      * @param os the OutputStream to write to
      * @throws IOException if there's an exception transferring bytes
+     * @return the amount of bytes written
      */
-    default void transfer(InputStream is, OutputStream os) throws IOException {
+    default Long transfer(InputStream is, OutputStream os) throws IOException {
+        Long written = 0L;
         ReadableByteChannel inch = Channels.newChannel(is);
         WritableByteChannel wrch = Channels.newChannel(os);
 
@@ -76,13 +77,13 @@ public interface Packager {
         ByteBuffer buffer = ByteBuffer.allocateDirect(32768);
         while (inch.read(buffer) != -1) {
             buffer.flip();
-            wrch.write(buffer);
+            written += wrch.write(buffer);
             buffer.compact();
         }
 
         buffer.flip();
         if (buffer.hasRemaining()) {
-            wrch.write(buffer);
+            written += wrch.write(buffer);
         }
 
         buffer.clear();
@@ -90,6 +91,7 @@ public interface Packager {
         wrch.close();
         is.close();
         os.close();
+        return written;
     }
 
 }
