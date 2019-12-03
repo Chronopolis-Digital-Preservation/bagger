@@ -32,15 +32,10 @@
 
     <distributionManagement>
         <repository>
-            <id>adapt-releases</id>
-            <name>releases</name>
-            <url>https://scm.umiacs.umd.edu/adapt/repository/maven-releases/</url>
+            <id>ucsd.artifactory</id>
+            <name>lib-artifacts-releases</name>
+            <url>https://lib-artifacts.ucsd.edu/artifactory/maven-release-local</url>
         </repository>
-        <snapshotRepository>
-            <id>adapt-snapshots</id>
-            <name>snapshots</name>
-            <url>https://scm.umiacs.umd.edu/adapt/repository/maven-snapshots/</url>
-        </snapshotRepository>
     </distributionManagement>
 
     <dependencyManagement>
